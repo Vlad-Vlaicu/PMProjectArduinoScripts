@@ -1,0 +1,365 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define SLAVE_ADDR 9
+
+#define PLAY 4
+#define NEXT 3
+#define BACK 5
+
+const int BUZZER = 11;
+volatile unsigned long startTime;
+const unsigned long countdownDuration = 10000;
+volatile int canPlay = 0;
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+int currentState = 2;
+
+void setup() {
+  // put your setup code here, to run once:
+  
+  lcd.begin();
+  lcd.print("Hello, Vlad!");
+  lcd.flush();
+  delay(3000);
+  lcd.clear();
+  lcd.print("Metronome 1/4");
+
+  Serial.begin(9600);
+  Serial.println("I2C Master");
+  delay(50);
+
+  TCCR1A = 0;
+  TCCR1B = (1 << WGM12) | (1 << CS12);
+  OCR1A = 62500;
+  TIMSK1 |= (1 << OCIE1A);
+  sei();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  delay(50);
+  Wire.requestFrom(SLAVE_ADDR, 1);
+
+  byte command = Wire.read();
+  Serial.print(command);
+
+  if(command != 0){
+ 
+    if(currentState == 2){
+
+      if (command == PLAY) {
+        lcd.clear();
+        lcd.print("PLAY");
+        currentState = 1;
+        playM14();
+      }
+
+      if (command == NEXT){
+        lcd.clear();
+        lcd.print("Metronome 2/4");
+        currentState = 3;
+      }
+
+      command = 0;
+    }
+
+    if(currentState == 3){
+
+      if (command == PLAY) {
+        lcd.clear();
+        lcd.print("PLAY");
+        
+        currentState = 1;
+      
+        playM24();
+      }
+
+      if(command == BACK){
+        lcd.clear();
+        lcd.print("Metronome 1/4");
+        currentState = 2;
+      }
+
+      if(command == NEXT){
+        lcd.clear();
+        lcd.print("Metronome 4/4");
+        currentState = 4;
+      }
+
+      command = 0;
+    }
+
+    if(currentState == 4){
+
+      if (command == PLAY){
+        lcd.clear();
+        lcd.print("PLAY");
+        currentState = 1;
+        playM44();
+      }
+
+      if (command == NEXT) {
+        lcd.clear();
+        lcd.print("Metronome 1/3");
+        currentState = 5;
+      }
+
+      if (command == BACK){
+        lcd.clear();
+        lcd.print("Metronome 2/4");
+        currentState = 3;
+      }
+
+      command = 0;
+    }
+
+    if (currentState == 5){
+
+      if (command == PLAY){
+        lcd.clear();
+        lcd.print("PLAY");
+        currentState = 1;
+        playM13();
+      }
+
+      if (command == BACK){
+        lcd.clear();
+        lcd.print("Metronome 4/4");
+        currentState = 4;
+      }
+
+      command = 0;
+
+    }
+  }
+  
+  delay(500);
+}
+
+void playM14(){
+
+  startTime = millis();
+  canPlay = 0;
+  byte stopFlag = 0;
+  int tempo = 0;
+  int bpm = 120;
+  lcd.setCursor(0, 1);
+  lcd.print(bpm);
+  lcd.print(" BPM");
+  while(stopFlag != 4 && canPlay == 0){
+    Wire.requestFrom(SLAVE_ADDR, 1);
+    stopFlag = Wire.read();
+
+    if(stopFlag == BACK){
+      tempo = tempo + 12;
+      bpm = bpm - 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+    if(stopFlag == NEXT){
+      tempo = tempo - 12;
+      bpm = bpm + 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+
+    tone(BUZZER, 1400);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+    Wire.requestFrom(SLAVE_ADDR, 1);
+    stopFlag = Wire.read();
+
+    if(stopFlag == BACK){
+      tempo = tempo + 12;
+      bpm = bpm - 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+    if(stopFlag == NEXT){
+      tempo = tempo - 12;
+      bpm = bpm + 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+
+    if(stopFlag == PLAY || canPlay == 1){
+      lcd.clear();
+      lcd.print("Metronome 1/4");
+      currentState = 2;
+      return;
+    }
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+  }
+  lcd.clear();
+  lcd.print("Metronome 1/4");
+  currentState = 2;
+}
+
+void playM24(){
+
+  startTime = millis();
+  canPlay = 0;
+  byte stopFlag = 0;
+  int tempo = 0;
+  int bpm = 120;
+  lcd.setCursor(0, 1);
+  lcd.print(bpm);
+  lcd.print(" BPM");
+  while(stopFlag != 4 && canPlay == 0){
+    Wire.requestFrom(SLAVE_ADDR, 1);
+    stopFlag = Wire.read();
+
+    if(stopFlag == BACK){
+      tempo = tempo + 12;
+      bpm = bpm - 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+    if(stopFlag == NEXT){
+      tempo = tempo - 12;
+      bpm = bpm + 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+
+    tone(BUZZER, 1400);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+
+  }
+  
+  lcd.clear();
+  lcd.print("Metronome 1/4");
+  currentState = 2;
+}
+
+void playM44(){
+
+  startTime = millis();
+  canPlay = 0;
+  byte stopFlag = 0;
+  int tempo = 0;
+  int bpm = 120;
+  lcd.setCursor(0, 1);
+  lcd.print(bpm);
+  lcd.print(" BPM");
+  while(stopFlag != 4 && canPlay == 0){
+    Wire.requestFrom(SLAVE_ADDR, 1);
+    stopFlag = Wire.read();
+
+    if(stopFlag == BACK){
+      tempo = tempo + 12;
+      bpm = bpm - 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+    if(stopFlag == NEXT){
+      tempo = tempo - 12;
+      bpm = bpm + 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+
+    tone(BUZZER, 1400);
+    delay(50);
+    noTone(BUZZER);
+    delay(500 + tempo);
+  }
+  
+  lcd.clear();
+  lcd.print("Metronome 1/4");
+  currentState = 2;
+}
+
+void playM13(){
+
+  startTime = millis();
+  canPlay = 0;
+  byte stopFlag = 0;
+  int tempo = 0;
+  int bpm = 180;
+  lcd.setCursor(0, 1);
+  lcd.print(bpm);
+  lcd.print(" BPM");
+  while(stopFlag != 4 && canPlay == 0){
+    Wire.requestFrom(SLAVE_ADDR, 1);
+    stopFlag = Wire.read();
+
+    if(stopFlag == BACK){
+      tempo = tempo + 12;
+      bpm = bpm - 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+    if(stopFlag == NEXT){
+      tempo = tempo - 12;
+      bpm = bpm + 5;
+      lcd.setCursor(0, 1);
+      lcd.print(bpm);
+      lcd.print(" BPM");
+    }
+
+    tone(BUZZER, 1400);
+    delay(50);
+    noTone(BUZZER);
+    delay(333 + tempo);
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(333 + tempo);
+
+    tone(BUZZER, 1000);
+    delay(50);
+    noTone(BUZZER);
+    delay(333 + tempo);
+  }
+  
+  lcd.clear();
+  lcd.print("Metronome 1/4");
+  currentState = 2;
+}
+
+ISR(TIMER1_COMPA_vect){
+  if (millis() - startTime >= countdownDuration){
+    canPlay = 1;
+  }
+}
+
+
+
+
+

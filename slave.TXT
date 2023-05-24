@@ -1,0 +1,119 @@
+#include <Wire.h>
+
+#define NOTE_C 1046
+#define NOTE_D 1174
+#define NOTE_E 1318
+#define NOTE_F 1396
+#define NOTE_G 1567
+#define NOTE_A 1760
+#define NOTE_B 1975
+#define SLAVE_ADDR 9
+
+const int BUZZER = 13;
+
+const int BUTTON_C = 12;
+const int BUTTON_D = 11;
+const int BUTTON_E = 10;
+const int BUTTON_F = 9;
+const int BUTTON_G = 8;
+const int BUTTON_A = 7;
+const int BUTTON_B = 6;
+const int BACK = 5;
+const int ENTER = 4;
+const int NEXT = 3;
+
+byte command = 0;
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("I2C Slave");
+  
+  pinMode(BUZZER, OUTPUT);
+
+  pinMode(BUTTON_C, INPUT);
+  digitalWrite(BUTTON_C, HIGH);
+
+  pinMode(BUTTON_C, INPUT);
+  digitalWrite(BUTTON_C, HIGH);
+
+  pinMode(BUTTON_D, INPUT);
+  digitalWrite(BUTTON_D, HIGH);
+
+  pinMode(BUTTON_E, INPUT);
+  digitalWrite(BUTTON_E, HIGH);
+
+  pinMode(BUTTON_F, INPUT);
+  digitalWrite(BUTTON_F, HIGH);
+
+  pinMode(BUTTON_G, INPUT);
+  digitalWrite(BUTTON_G, HIGH);
+
+  pinMode(BUTTON_A, INPUT);
+  digitalWrite(BUTTON_A, HIGH);
+
+  pinMode(BUTTON_B, INPUT);
+  digitalWrite(BUTTON_B, HIGH);
+
+  pinMode(BACK, INPUT);
+  digitalWrite(BACK, HIGH);
+
+  pinMode(ENTER, INPUT);
+  digitalWrite(ENTER, HIGH);
+
+  pinMode(NEXT, INPUT);
+  digitalWrite(NEXT, HIGH);
+
+  Wire.begin(SLAVE_ADDR);
+  Wire.onRequest(getCommand);
+
+}
+
+void loop() {
+
+  while(digitalRead(BUTTON_C) == LOW){
+    tone(BUZZER, NOTE_C);
+  }
+
+  while(digitalRead(BUTTON_D) == LOW){
+    tone(BUZZER, NOTE_D);
+  }
+
+  while(digitalRead(BUTTON_E) == LOW){
+    tone(BUZZER, NOTE_E);
+  }
+
+  while(digitalRead(BUTTON_F) == LOW){
+    tone(BUZZER, NOTE_F);
+  }
+
+  while(digitalRead(BUTTON_G) == LOW){
+    tone(BUZZER, NOTE_G);
+  }
+
+  while(digitalRead(BUTTON_A) == LOW){
+    tone(BUZZER, NOTE_A);
+  }
+
+  while(digitalRead(BUTTON_B) == LOW){
+    tone(BUZZER, NOTE_B);
+  }
+
+  while(digitalRead(BACK) == LOW){
+    command = 5;
+  }
+
+  while(digitalRead(ENTER) == LOW){
+    command = 4;
+  }
+
+  while(digitalRead(NEXT) == LOW){
+    command = 3;
+  }
+
+  noTone(BUZZER);
+}
+
+void getCommand(){
+  Wire.write(command);
+  command = 0;
+}
